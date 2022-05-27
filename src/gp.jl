@@ -1,4 +1,4 @@
-function gp(tobs, yobs, σobs; K = K, iterations = iterations, seed = 1, numberofrestarts = 1, initialrandom = 100)
+function gp(tobs, yobs, σobs; K = K, iterations = iterations, seed = 1, numberofrestarts = 1, initialrandom = 1)
 
     #---------------------------------------------------------------------
     # Fix random seed for reproducibility
@@ -22,15 +22,18 @@ function gp(tobs, yobs, σobs; K = K, iterations = iterations, seed = 1, numbero
     Σobs = Diagonal(reduce(vcat, σobs).^2)
 
     softplus(x) = log(1+exp(x))
+
     #---------------------------------------------------------------------
     function unpack(param)
     #---------------------------------------------------------------------
 
         @assert(length(param) == K * 3)
 
+        # local logw = (param[1+0K:1*K])
+
         local w = softplus.(param[1+0K:1*K])
 
-        local μ = softplus.(param[1+1K:2*K])
+        local μ = (param[1+1K:2*K])
 
         local u = softplus.(param[1+2K:3*K])
 
@@ -47,9 +50,9 @@ function gp(tobs, yobs, σobs; K = K, iterations = iterations, seed = 1, numbero
 
         local w, μ, u = unpack(param)
 
-        local K = sm(tobs; w, μ, u)
+        local C = sm(tobs; w, μ, u)
 
-        local KΣobs = K + Σobs + JITTER * I
+        local KΣobs = C + Σobs + JITTER * I
 
         makematrixsymmetric!(KΣobs)
 
@@ -79,11 +82,11 @@ function gp(tobs, yobs, σobs; K = K, iterations = iterations, seed = 1, numbero
 
     function getsolution()
 
-        randomsolutions = [[3*rand(K); randμ(); 3*randn(K)] for i in 1:initialrandom]
+        randomsolutions = [[3*randn(K); randμ(); 3*randn(K)] for i in 1:initialrandom]
 
         bestindex = argmin(map(safeobj, randomsolutions))
 
-        opt = Optim.Options(show_trace = true, iterations = iterations, show_every = 500, g_tol=1e-6)
+        opt = Optim.Options(show_trace = true, iterations = iterations, show_every = 500, g_tol=1e-9)
 
         optimize(safenegativeobj, randomsolutions[bestindex], NelderMead(), opt)
 
@@ -104,9 +107,9 @@ function gp(tobs, yobs, σobs; K = K, iterations = iterations, seed = 1, numbero
 
     w, μ, u = unpack(paramopt)
 
-    K = sm(tobs; w, μ, u)
+    C = sm(tobs; w, μ, u)
 
-    KΣobs = K + Σobs + JITTER * I
+    KΣobs = C + Σobs + JITTER * I
 
     makematrixsymmetric!(KΣobs)
 

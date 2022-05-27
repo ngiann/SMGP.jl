@@ -6,10 +6,12 @@ module SMGP
 
     include("gp.jl")
 
+    include("gpmulti2.jl"); include("objectivemultigp.jl")
+
     include("sincpattern.jl")
 
-    include("sinpattern.jl")
+    include("sinpatterns.jl")
 
-    export sincpattern, sinpattern, gp
+    export sincpatterns, sinpatterns, gp, gpmulti2
 
 end

@@ -6,7 +6,7 @@ function sinpattern(N, σ=0.01)
 
     n = collect(1:36)
 
-    yobs = y.(n*T) + randn(N)*σ
+    yobs = y.(n*T) .+ randn(N)*σ
 
     n*T, yobs, ones(N)*σ
 end
